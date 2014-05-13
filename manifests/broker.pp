@@ -216,6 +216,18 @@ class openshift_origin::broker {
     subscribe => Exec['Broker gem dependencies'],
   }
 
+  exec { 'restorecon broker dir':
+    command  => 'restorecon -R /var/www/openshift/broker',
+    provider => 'shell',
+    require  => [
+      Package['openshift-origin-broker'],
+      Package['openshift-origin-broker-util'],
+      Package['rubygem-openshift-origin-msg-broker-mcollective'],
+      Package['rubygem-openshift-origin-admin-console'],
+    ],
+    notify   => Service['openshift-broker'],
+  }
+
   service { 'openshift-broker':
     ensure     => true,
     enable     => true,

@@ -13,9 +13,31 @@
 #  limitations under the License.
 #
 class openshift_origin::firewall::node {
-  lokkit::custom { 'openshift_node_rules':
-    type   => 'ipv4',
-    table  => 'filter',
-    source => 'puppet:///modules/openshift_origin/firewall/node_iptables.txt',
+  #lokkit::custom { 'openshift_node_rules':
+  #  type   => 'ipv4',
+  #  table  => 'filter',
+  #  source => 'puppet:///modules/openshift_origin/firewall/node_iptables.txt',
+  #}
+  lokkit::custom { 'system-config-firewall-compat':
+    type    => 'ipv4',
+    table   => 'filter',
+    source  => '/etc/openshift/system-config-firewall-compat',
+    require => Package['rubygem-openshift-origin-node'],
   }
+  lokkit::custom { 'iptables.filter.rules':
+    type    => 'ipv4',
+    table   => 'filter',
+    source  => '/etc/openshift/iptables.filter.rules',
+    require => Package['rubygem-openshift-origin-node'],
+  }
+  lokkit::custom { 'iptables.nat.rules':
+    type    => 'ipv4',
+    table   => 'nat',
+    source  => '/etc/openshift/iptables.nat.rules',
+    require => Package['rubygem-openshift-origin-node'],
+  }
+
+  # Make sure the <code>openshift-iptables-port-proxy</code> is restarted any time that <code>lokkit</code> restarts
+  # the firewall when it updates.
+  Exec['lokkit_update'] ~> Service['openshift-iptables-port-proxy']
 }
